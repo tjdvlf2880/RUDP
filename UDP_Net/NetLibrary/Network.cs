@@ -31,12 +31,12 @@ namespace NetLibrary
             ReceiveArgpool = new ReceiveEventArgsPool(SocketReceiveCallback);
             EndUserNum = new InterLockedVal(MaxConnection);
             SyncNotifer = new Notifier<EndUser>(MaxConnection);
+            Run = true;
             for (int i = 0; i < (int)Params.MaxReceiveArgsNum; i++)
             {
                 RequestReceive();
             }
             NetThread = new Thread(NetworkThread);
-            Run = true;
             NetThread.Start();
 
         }
