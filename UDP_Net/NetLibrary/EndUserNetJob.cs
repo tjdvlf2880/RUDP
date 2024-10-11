@@ -128,12 +128,19 @@ namespace NetLibrary
                             MaxSendDelay += (int)Params.SendDelayIncrease;
                             CurSendDelay = 0;
                             SendCount++;
-                            Logger.DebugLog($"Send {Sequence} , total : {SendCount}");
                         }
                     }
                 }
             }
         }
+
+
+       public bool IsLargerSeq(uint Lseq, uint Rseq)
+       {
+            uint diff = Lseq > Rseq ? Lseq - Rseq : Rseq - Lseq;
+            return diff > uint.MaxValue / 2 ? Lseq < Rseq : Lseq > Rseq;
+       }
+
 
         void NetJob_ReceiveACK(Memory<byte> packet)
         {
@@ -152,7 +159,8 @@ namespace NetLibrary
             {
                 job.SetACK(true);
             }
-            for (uint i = PacketSeq-1; (i > SendCompleteSeq) && (loopCount < 8); i--)
+
+            for (uint i = PacketSeq-1; IsLargerSeq(i , SendCompleteSeq) && (loopCount < 8); i--)
             {
                 if (SendJobs.TryGetValue(i, out var prevjob))
                 {
@@ -168,7 +176,7 @@ namespace NetLibrary
         }
         void CheckSendComplete()
         {
-            for (uint i = SendCompleteSeq + 1; i < NextSendSeq; i++)
+            for (uint i = SendCompleteSeq + 1; IsLargerSeq(NextSendSeq ,i); i++)
             {
                 if (SendJobs.TryGetValue(i, out var job))
                 {
@@ -197,19 +205,19 @@ namespace NetLibrary
             int DataSize = packet.Length - (PacketTypeLength +PacketSeqLength);
             uint PacketSeq = BitConverter.ToUInt32(packet.Slice(PacketTypeLength, PacketSeqLength).Span);
 
-            if (MaxReceiveSeq < PacketSeq)
+            if (IsLargerSeq(PacketSeq,MaxReceiveSeq))
             {
                 MaxReceiveSeq = PacketSeq;
             }
 
-            if (PacketSeq > ReceiveCompleteSeq)
+            if (IsLargerSeq( PacketSeq , ReceiveCompleteSeq))
             {
                 if (ReceiveJobs.TryGetValue(PacketSeq, out var existJob))
                 {
                     Send_DATAACK(packet);
                     CheckReceiveComplete();
                 }
-                else if((PacketSeq - ReceiveCompleteSeq) <= (int)Params.MaxBlockReceiveNum)
+                else if( Math.Abs(PacketSeq - ReceiveCompleteSeq) <= (int)Params.MaxBlockReceiveNum)
                 {
                     if (ReceiveJobPool.Get(out var Newjob))
                     {
@@ -234,7 +242,7 @@ namespace NetLibrary
             int seqlength = 4;
             int datalength = 1;
 
-            for (uint i = ReceiveCompleteSeq + 1; i <= MaxReceiveSeq; i++)
+            for (uint i = ReceiveCompleteSeq + 1; IsLargerSeq(MaxReceiveSeq+1,i); i++)
             {
                 if (ReceiveJobs.TryGetValue(i, out var job))
                 {
@@ -276,7 +284,7 @@ namespace NetLibrary
                 byte bitfield = 1;
                 int loopCount = 0;
 
-                for (uint i = PacketSeq - 1; (i > ReceiveCompleteSeq) && (loopCount < 8); i--)
+                for (uint i = PacketSeq - 1; IsLargerSeq(i , ReceiveCompleteSeq) && (loopCount < 8); i--)
                 {
                     if (ReceiveJobs.TryGetValue(i, out var job))
                     {
@@ -303,7 +311,7 @@ namespace NetLibrary
         void NetJob_Send()
         {
             int ServerMaxBlockSendNum =(int)Params.MaxBlockReceiveNum;
-            if(NextSendSeq - SendCompleteSeq <= Math.Min(ServerMaxBlockSendNum, (int)Params.MaxBlockSendNum))
+            if( Math.Abs(NextSendSeq - SendCompleteSeq) <= Math.Min(ServerMaxBlockSendNum, (int)Params.MaxBlockSendNum))
             {
                 if (DispatchedQueue.TryPeek(out var packet))
                 {

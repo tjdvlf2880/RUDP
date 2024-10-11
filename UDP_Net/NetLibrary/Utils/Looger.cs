@@ -10,7 +10,10 @@ namespace NetLibrary.Utils
     {
         static public void DebugLog(string message)
         {
-            Console.WriteLine(message);
+            if ((int)Params.LoggerFlag == 1)
+            {
+                Console.WriteLine(message);
+            }
         }
     }
 }

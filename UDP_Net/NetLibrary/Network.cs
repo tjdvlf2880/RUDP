@@ -36,12 +36,9 @@ namespace NetLibrary
             ReceiveArgpool = new(SocketReceiveCallback);
             EndUserNum  = new InterLockedVal(MaxConnection);
             SyncNotifer = new Notifier<EndUser>(MaxConnection);
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < (int)Params.MaxReceiveArgsNum; i++)
             {
-                if (ReceiveArgpool.Get(out var e))
-                {
-                    RequestReceive();
-                }
+                RequestReceive();
             }
             NetThread= new Thread(NetworkThread);
             Run = true;

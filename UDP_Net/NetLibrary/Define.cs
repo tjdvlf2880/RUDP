@@ -44,11 +44,12 @@ namespace NetLibrary
     public enum Params : int
     {   
         // 디버그 플래그, 설정 시 절반 확률로 패킷을 버림
+        LoggerFlag = 1,
         PacketLoseMode = 0,
 
         // 소켓 송수신 지원 크기
-        MaxReceiveArgsNum = 100,
-        MaxSendArgsNum = 100,
+        MaxReceiveArgsNum = 255,
+        MaxSendArgsNum = 255,
         // 수신 패킷의 최대 사이즈
         MaxPacketBlockSize = 512,
 
@@ -58,8 +59,8 @@ namespace NetLibrary
         */
 
         // 블록 최대 송수신 개수
-        MaxBlockReceiveNum = 1000,
-        MaxBlockSendNum = 8,
+        MaxBlockReceiveNum = 100,
+        MaxBlockSendNum = 100,
         // 재송신 딜레이 증가량 
         SendDelayIncrease = 10,
         // 재송신 기준 Nak 개수

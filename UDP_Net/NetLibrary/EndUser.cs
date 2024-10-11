@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -43,6 +44,7 @@ namespace NetLibrary
             SysPacketQueue.Add(Header.SYNACK, new ConcurrentQueue<Memory<byte>>());
             SysPacketQueue.Add(Header.DATA, new ConcurrentQueue<Memory<byte>>());
             SysPacketQueue.Add(Header.DATAACK, new ConcurrentQueue<Memory<byte>>());
+            ReInit(SessionType.UDP,0);
         }
 
         public void ReInit(SessionType type, byte syncId)
@@ -65,7 +67,7 @@ namespace NetLibrary
 
             ReceiveCompleteSeq = 0;
             MaxReceiveSeq = 0;
-            
+
             foreach (var kvp in SendJobs)
             {
                 var job = kvp.Value;
@@ -74,6 +76,7 @@ namespace NetLibrary
             }
             SendCompleteSeq = 0;
             NextSendSeq = 1;
+
         }
 
         public ConcurrentQueue<Memory<byte>> GetSysQueue(Header header)
@@ -137,13 +140,6 @@ namespace NetLibrary
                 }
             }
         }
-       
-        void ProcSyncUserRequest()
-        {
-            var SYNQueue = GetSysQueue(Header.SYN);
-            var SYNACKQueue = GetSysQueue(Header.SYNACK);
-
-        }
 
         void ProcDATAACK()
         {
@@ -172,6 +168,12 @@ namespace NetLibrary
                     return;
                 }
                 NetJob_ReceiveDATA(packet);
+
+                if (DATAQueue.Count > (int)Params.MaxBlockReceiveNum * 2)
+                {
+                    Logger.DebugLog($"Too Many Packet... {DATAQueue.Count} Discard");
+                    DATAQueue.Clear();
+                }
             }
         }
         bool ProcSyncEndUser(IPEndPoint remote, long timeout)

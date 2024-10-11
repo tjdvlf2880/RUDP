@@ -14,7 +14,7 @@ namespace Client
         { 
             // 1. 자신의 IP PORT 로 네트워크 객체를 생성한다.
             //      1-1 네트워크 객체 생성시 최대 연결 개수를 지정한다.
-            string Serverip = "192.168.0.38";
+            string Serverip = "192.168.0.3";
             ushort Serverport = 8000;
             IPEndPoint ServerAddress = new IPEndPoint(IPAddress.Parse(Serverip).MapToIPv6(), Serverport);
             Network Server = new Network(ServerAddress, 255);
@@ -41,6 +41,8 @@ namespace Client
             FrameTimer timer = new FrameTimer();
             List<EndUser> userList = new List<EndUser>();
             bool Run = true;
+
+            uint seq = 0;
             while (Run)
             {
                 if (SyncList.TryTake(out var user))
@@ -50,9 +52,11 @@ namespace Client
                     {
                         userList.Add(user);
                     }
-                    for (int i = 0; i < 1000; i++)
+
+                    Logger.DebugLog(uint.MaxValue.ToString());
+                    for (int i = 0; i < 10; i++)
                     {
-                        user.DefferedSend(Encoding.UTF8.GetBytes($"New Sync{user.SyncID} Request?{i} Take This!"));
+                        user.DefferedSend(Encoding.UTF8.GetBytes($"New Sync{user.SyncID} Request?{(UInt128)int.MaxValue-5+(UInt128)i} Take This!"));
                         user.Dispatch();
                     }
                 }
@@ -60,6 +64,7 @@ namespace Client
                 // 서버 로직
                 foreach (var u in userList)
                 {
+                    seq++;
                     if (u.PacketCompleteQueue.TryDequeue(out var packet))
                     {
                         Logger.DebugLog(Encoding.UTF8.GetString(packet.Span));
