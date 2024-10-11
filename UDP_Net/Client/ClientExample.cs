@@ -17,7 +17,7 @@ namespace Client
             // 2. 네트워크 객체에서 원격지와 1대1 연결성을 갖는 EndUser를 생성한다.
             //      2-1. 서버 IP PORT를 알아야 한다. (DNS 서버를 통해 알아와야 한다.)
             //      2-2  최대 연결수를 넘어서 생성을 시도할 시 함수는 실패한다.
-            string Serverip = "192.168.0.3";
+            string Serverip = "192.168.0.38";
             ushort Serverport = 8000;
             IPEndPoint Server = new IPEndPoint(IPAddress.Parse(Serverip).MapToIPv6(), Serverport);
             bool Success = client.CreateEndUser(Server, SessionType.RUDP, out var user);
@@ -38,6 +38,8 @@ namespace Client
             //      5-2 이때 가져온 패킷은 블록이 아닌 개별 패킷들이다. 
             while (Run)
             {
+                user.DefferedSend(Encoding.UTF8.GetBytes($"hello Server"));
+                user.Dispatch();
                 if (user.PacketCompleteQueue.TryDequeue(out var packet))
                 {
                     Logger.DebugLog(Encoding.UTF8.GetString(packet.Span));

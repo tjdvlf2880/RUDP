@@ -12,7 +12,7 @@ namespace Client
         {
             // 1. 자신의 IP PORT 로 네트워크 객체를 생성한다.
             //      1-1 네트워크 객체 생성시 최대 연결 개수를 지정한다.
-            string Serverip = "192.168.0.3";
+            string Serverip = "192.168.0.38";
             ushort Serverport = 8000;
             IPEndPoint ServerAddress = new IPEndPoint(IPAddress.Parse(Serverip).MapToIPv6(), Serverport);
             Network Server = new Network(ServerAddress, 255);

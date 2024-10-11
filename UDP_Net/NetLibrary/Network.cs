@@ -163,7 +163,7 @@ namespace NetLibrary
         {
             Task.Run(() =>
             {
-                while (true)
+                while (Run)
                 {
                     if (ReceiveArgpool.Get(out var arg))
                     {
@@ -201,6 +201,7 @@ namespace NetLibrary
         {
             Run = false;
             NetThread.Join();
+            SyncNotifer.Dispose();
             socket.Dispose();
         }
     }

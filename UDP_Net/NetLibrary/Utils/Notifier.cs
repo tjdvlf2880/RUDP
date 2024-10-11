@@ -12,6 +12,10 @@ namespace NetLibrary.Utils
             semaphoreSlim = new SemaphoreSlim(0, max);
         }
 
+        public void Dispose()
+        {
+            semaphoreSlim.Dispose();
+        }
         public void Notify(T val)
         {
             values.Enqueue(val);
