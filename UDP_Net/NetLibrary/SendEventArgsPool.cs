@@ -1,13 +1,6 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NetLibrary
 {
@@ -22,7 +15,7 @@ namespace NetLibrary
             for (int i = 0; i < (int)Params.MaxSendArgsNum; i++)
             {
                 SocketAsyncEventArgs e;
-                _Create(out  e);
+                _Create(out e);
                 pool.Add(e);
             }
         }
@@ -33,7 +26,7 @@ namespace NetLibrary
             return e != null;
         }
 
-        public  void Return(SocketAsyncEventArgs e)
+        public void Return(SocketAsyncEventArgs e)
         {
             e.SetBuffer(null);
             e.RemoteEndPoint = null;

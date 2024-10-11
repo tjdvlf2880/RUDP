@@ -1,6 +1,5 @@
 ﻿using NetLibrary;
 using NetLibrary.Utils;
-using System.IO.IsolatedStorage;
 using System.Net;
 using System.Text;
 
@@ -48,6 +47,6 @@ namespace Client
             // 6. 메모리 해제
             //    6-1 네트워크 객체가 정리될때 User도 같이 정리된다.
             client.Dispose();
-       }
+        }
     }
 }

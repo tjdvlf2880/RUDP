@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using System.Net.Sockets;
-using System.Net;
 
 namespace NetLibrary
 {
@@ -32,7 +27,7 @@ namespace NetLibrary
                 pool.Add(e);
             }
         }
-        void Create(out SocketAsyncEventArgs e , Memory<byte> buffer)
+        void Create(out SocketAsyncEventArgs e, Memory<byte> buffer)
         {
             e = new SocketAsyncEventArgs();
             e.SetBuffer(buffer);

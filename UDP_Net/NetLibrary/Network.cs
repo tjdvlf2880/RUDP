@@ -1,14 +1,9 @@
 ﻿
 using NetLibrary.Utils;
-using System;
-using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NetLibrary
@@ -24,23 +19,23 @@ namespace NetLibrary
         InterLockedVal EndUserNum;
 
         //혼잡을 방지하기 위해 최대 개수를 정한다.  
-        public ConcurrentDictionary<IPEndPoint, EndUser> EndUsers = new();
+        public ConcurrentDictionary<IPEndPoint, EndUser> EndUsers = new ConcurrentDictionary<IPEndPoint, EndUser>();
 
         Thread NetThread;
         bool Run = false;
 
-        public Network(IPEndPoint local , int MaxConnection)
+        public Network(IPEndPoint local, int MaxConnection)
         {
             socket = new UDPSocket(local);
-            SendArgpool = new(SocketSendCallback);
-            ReceiveArgpool = new(SocketReceiveCallback);
-            EndUserNum  = new InterLockedVal(MaxConnection);
+            SendArgpool = new SendEventArgsPool(SocketSendCallback);
+            ReceiveArgpool = new ReceiveEventArgsPool(SocketReceiveCallback);
+            EndUserNum = new InterLockedVal(MaxConnection);
             SyncNotifer = new Notifier<EndUser>(MaxConnection);
             for (int i = 0; i < (int)Params.MaxReceiveArgsNum; i++)
             {
                 RequestReceive();
             }
-            NetThread= new Thread(NetworkThread);
+            NetThread = new Thread(NetworkThread);
             Run = true;
             NetThread.Start();
 
@@ -58,23 +53,23 @@ namespace NetLibrary
             }
         }
 
-        public bool CreateEndUser(IPEndPoint remote, SessionType type , out EndUser user)
+        public bool CreateEndUser(IPEndPoint remote, SessionType type, out EndUser user)
         {
             EndUser Newuser = new EndUser(type, this);
             Newuser.RemoteEndPoint = remote;
             AddOrUpdateUser(Newuser, remote);
-            return EndUsers.TryGetValue(remote,out user);
+            return EndUsers.TryGetValue(remote, out user);
         }
 
-        public bool WaitSyncRequest(out EndUser user ,int? timeout)
+        public bool WaitSyncRequest(out EndUser user, int? timeout)
         {
             SyncNotifer.Wait(out user, timeout);
             return user != null;
         }
 
-        void Enqueue(Header header , SocketAsyncEventArgs e)
+        void Enqueue(Header header, SocketAsyncEventArgs e)
         {
-            IPEndPoint remote = e.RemoteEndPoint as IPEndPoint;
+            IPEndPoint? remote = e.RemoteEndPoint as IPEndPoint;
             if (EndUsers.TryGetValue(remote, out var user))
             {
                 user.GetSysQueue(header).Enqueue(e.MemoryBuffer.Slice(0, e.BytesTransferred).ToArray());
@@ -90,7 +85,7 @@ namespace NetLibrary
                     return false;
                 }
                 NewUser.RemoteEndPoint = remote;
-                if(!EndUsers.TryAdd(remote, NewUser))
+                if (!EndUsers.TryAdd(remote, NewUser))
                 {
                     EndUserNum.Increase();
                 }
@@ -115,13 +110,13 @@ namespace NetLibrary
                 return;
             };
             Header header = (Header)e.MemoryBuffer.Span[0];
-            IPEndPoint remote = e.RemoteEndPoint as IPEndPoint;
-            net.AddOrUpdateUser(new EndUser(SessionType.UDP,net), remote);
+            IPEndPoint? remote = e.RemoteEndPoint as IPEndPoint;
+            net.AddOrUpdateUser(new EndUser(SessionType.UDP, net), remote);
             switch (header)
             {
                 case (Header.SYN):
                     {
-                        net.Enqueue(header,e);
+                        net.Enqueue(header, e);
                     }
                     break;
                 case (Header.SYNACK):

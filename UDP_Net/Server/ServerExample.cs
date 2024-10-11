@@ -3,15 +3,13 @@ using NetLibrary.Utils;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
-using System.Net.Sockets;
-using System.IO.IsolatedStorage;
 
 namespace Client
 {
     internal class Program
     {
         static void Main(string[] args)
-        { 
+        {
             // 1. 자신의 IP PORT 로 네트워크 객체를 생성한다.
             //      1-1 네트워크 객체 생성시 최대 연결 개수를 지정한다.
             string Serverip = "192.168.0.3";
@@ -56,7 +54,7 @@ namespace Client
                     Logger.DebugLog(uint.MaxValue.ToString());
                     for (int i = 0; i < 10; i++)
                     {
-                        user.DefferedSend(Encoding.UTF8.GetBytes($"New Sync{user.SyncID} Request?{(UInt128)int.MaxValue-5+(UInt128)i} Take This!"));
+                        user.DefferedSend(Encoding.UTF8.GetBytes($"New Sync{user.SyncID} Request?{(UInt128)int.MaxValue - 5 + (UInt128)i} Take This!"));
                         user.Dispatch();
                     }
                 }

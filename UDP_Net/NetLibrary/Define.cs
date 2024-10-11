@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NetLibrary
 {
@@ -26,9 +22,9 @@ namespace NetLibrary
     [Flags]
     public enum Header : byte
     {
-        DATA_ID_1      = 1,
-        DATA_ID_2      = 2,
-        DATA_ID_3      = 3,
+        DATA_ID_1 = 1,
+        DATA_ID_2 = 2,
+        DATA_ID_3 = 3,
 
         DATAACK_ID_1 = 4,
         DATAACK_ID_2 = 5,
@@ -42,9 +38,10 @@ namespace NetLibrary
     }
 
     public enum Params : int
-    {   
+    {
         // 디버그 플래그, 설정 시 절반 확률로 패킷을 버림
         LoggerFlag = 1,
+        UnityLogger = 0,
         PacketLoseMode = 0,
 
         // 소켓 송수신 지원 크기
@@ -59,8 +56,8 @@ namespace NetLibrary
         */
 
         // 블록 최대 송수신 개수
-        MaxBlockReceiveNum = 100,
-        MaxBlockSendNum = 100,
+        MaxBlockReceiveNum = 10,
+        MaxBlockSendNum = 10,
         // 재송신 딜레이 증가량 
         SendDelayIncrease = 10,
         // 재송신 기준 Nak 개수

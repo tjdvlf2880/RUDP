@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace NetLibrary.Utils
 {
@@ -50,7 +46,7 @@ namespace NetLibrary.Utils
             {
                 currentValue = Val;
                 NewVal = newVal.Invoke(currentValue);
-                if(currentValue == NewVal) break;
+                if (currentValue == NewVal) break;
             } while (Interlocked.CompareExchange(ref Val, NewVal, currentValue) == currentValue);
         }
 
@@ -89,7 +85,7 @@ namespace NetLibrary.Utils
                 if (b)
                 {
                     if (currentValue == NewVal) return true;
-                    if(Interlocked.CompareExchange(ref Val, NewVal, currentValue) == currentValue)
+                    if (Interlocked.CompareExchange(ref Val, NewVal, currentValue) == currentValue)
                     {
                         return true;
                     }
