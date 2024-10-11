@@ -1,15 +1,14 @@
 ﻿using System;
-using Unity;
 using UnityEngine;
 namespace NetLibrary.Utils
 {
-    public class Logger
+    public class NetLogger
     {
         static public void DebugLog(string message)
         {
-            if ((int)Params.LoggerFlag == 1)
+            if (DefineFlag.LogEnable)
             {
-                if((int)Params.UnityLogger == 1)
+                if (DefineFlag.UnityLog)
                 {
                     Debug.Log(message);
                 }

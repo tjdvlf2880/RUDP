@@ -13,7 +13,7 @@ namespace NetLibrary
         {
             if (!Socket.OSSupportsIPv6)
             {
-                Logger.DebugLog("IPv6 is not supported by the OS");
+                NetLogger.DebugLog("IPv6 is not supported by the OS");
                 return;
             }
             CreateSocket(local);
@@ -33,11 +33,11 @@ namespace NetLibrary
                     byte[] outValue = new byte[] { 0 };
                     sock.IOControl(SIO_UDP_CONNRESET, inValue, outValue);
                     sock.Bind(local);
-                    Logger.DebugLog($"Sock Create : {local.Port.ToString()}");
+                    NetLogger.DebugLog($"Sock Create : {local.Port.ToString()}");
                 }
                 catch (SocketException ex)
                 {
-                    Logger.DebugLog($"CreateSocket Error : {ex.Message}");
+                    NetLogger.DebugLog($"CreateSocket Error : {ex.Message}");
                     Dispose();
                 }
             }
@@ -54,7 +54,7 @@ namespace NetLibrary
                 }
                 else
                 {
-                    Logger.DebugLog("Receive 동기적 완료 중 오류 발생: " + args.SocketError);
+                    NetLogger.DebugLog("Receive 동기적 완료 중 오류 발생: " + args.SocketError);
                     return false;
                 }
             }
@@ -63,7 +63,7 @@ namespace NetLibrary
         public bool Send(SocketAsyncEventArgs args, EventHandler<SocketAsyncEventArgs> callback)
         {
             if (sock == null) return false;
-            if ((int)Params.PacketLoseMode == 1)
+            if (DefineFlag.PacketLoseMode)
             {
                 //절반확률로 패킷 버리기
                 Random rand = new Random();
@@ -82,7 +82,7 @@ namespace NetLibrary
                 }
                 else
                 {
-                    Logger.DebugLog("SendAsync 동기적 완료 중 오류 발생: " + args.SocketError);
+                    NetLogger.DebugLog("SendAsync 동기적 완료 중 오류 발생: " + args.SocketError);
                     return false;
                 }
             }

@@ -12,7 +12,7 @@ namespace NetLibrary
         {
             SendCallback = callback;
             pool = new ConcurrentBag<SocketAsyncEventArgs>();
-            for (int i = 0; i < (int)Params.MaxSendArgsNum; i++)
+            for (int i = 0; i < DefineFlag.MaxSendArgsNum; i++)
             {
                 SocketAsyncEventArgs e;
                 _Create(out e);

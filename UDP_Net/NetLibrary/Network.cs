@@ -32,7 +32,7 @@ namespace NetLibrary
             EndUserNum = new InterLockedVal(MaxConnection);
             SyncNotifer = new Notifier<EndUser>(MaxConnection);
             Run = true;
-            for (int i = 0; i < (int)Params.MaxReceiveArgsNum; i++)
+            for (int i = 0; i < DefineFlag.MaxReceiveArgsNum; i++)
             {
                 RequestReceive();
             }
@@ -102,11 +102,11 @@ namespace NetLibrary
             Network net = e.UserToken as Network;
             if (e.SocketError != SocketError.Success)
             {
-                Logger.DebugLog(e.SocketError.ToString());
+                NetLogger.DebugLog(e.SocketError.ToString());
                 net.ReceiveArgpool.Return(e);
                 net.RequestReceive();
 
-                Logger.DebugLog(e.SocketError.ToString());
+                NetLogger.DebugLog(e.SocketError.ToString());
                 return;
             };
             Header header = (Header)e.MemoryBuffer.Span[0];
@@ -190,7 +190,7 @@ namespace NetLibrary
             Network net = e.UserToken as Network;
             if (e.SocketError != SocketError.Success)
             {
-                Logger.DebugLog(e.SocketError.ToString());
+                NetLogger.DebugLog(e.SocketError.ToString());
                 net.SendArgpool.Return(e);
                 return;
             };

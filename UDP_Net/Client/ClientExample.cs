@@ -42,7 +42,7 @@ namespace Client
                 user.Dispatch();
                 if (user.PacketCompleteQueue.TryDequeue(out var packet))
                 {
-                    Logger.DebugLog(Encoding.UTF8.GetString(packet.Span));
+                    NetLogger.DebugLog(Encoding.UTF8.GetString(packet.Span));
                 }
 
             }

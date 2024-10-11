@@ -17,8 +17,6 @@ namespace NetLibrary
         SYNC = 0,
     }
 
-
-
     [Flags]
     public enum Header : byte
     {
@@ -37,18 +35,17 @@ namespace NetLibrary
         DATAACK = 11,
     }
 
-    public enum Params : int
+    public class DefineFlag
     {
-        // 디버그 플래그, 설정 시 절반 확률로 패킷을 버림
-        LoggerFlag = 1,
-        UnityLogger = 0,
-        PacketLoseMode = 0,
+        public static bool LogEnable = true;
+        public static bool UnityLog = true;
+        public static bool PacketLoseMode = true;
 
         // 소켓 송수신 지원 크기
-        MaxReceiveArgsNum = 255,
-        MaxSendArgsNum = 255,
+        public static int MaxReceiveArgsNum = 255;
+        public static int MaxSendArgsNum = 255;
         // 수신 패킷의 최대 사이즈
-        MaxPacketBlockSize = 512,
+        public static int MaxPacketBlockSize = 512;
 
         /* 
          * 다음의 Param 은 네트워크 상태에 따라 최적화가 가능하며 
@@ -56,11 +53,12 @@ namespace NetLibrary
         */
 
         // 블록 최대 송수신 개수
-        MaxBlockReceiveNum = 10,
-        MaxBlockSendNum = 10,
+        public static int MaxBlockReceiveNum = 30;
+        public static int MaxBlockSendNum = 15;
         // 재송신 딜레이 증가량 
-        SendDelayIncrease = 10,
+        public static int SendDelayIncrease = 10;
         // 재송신 기준 Nak 개수
-        NakNum = 3,
+        public static int NakNum = 3;
+
     }
 }

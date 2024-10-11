@@ -17,13 +17,13 @@ namespace NetLibrary
         {
             pool = new ConcurrentBag<SocketAsyncEventArgs>();
             ReceiveCallback = callback;
-            Memory<byte> mem = new byte[(int)Params.MaxReceiveArgsNum * (int)Params.MaxPacketBlockSize];
+            Memory<byte> mem = new byte[DefineFlag.MaxReceiveArgsNum * DefineFlag.MaxPacketBlockSize];
             mem.Span.Fill(0);
 
-            for (int i = 0; i < (int)Params.MaxReceiveArgsNum; i++)
+            for (int i = 0; i < DefineFlag.MaxReceiveArgsNum; i++)
             {
                 SocketAsyncEventArgs e;
-                Create(out e, mem.Slice(i * (int)Params.MaxPacketBlockSize, (int)Params.MaxPacketBlockSize));
+                Create(out e, mem.Slice(i * DefineFlag.MaxPacketBlockSize, DefineFlag.MaxPacketBlockSize));
                 pool.Add(e);
             }
         }

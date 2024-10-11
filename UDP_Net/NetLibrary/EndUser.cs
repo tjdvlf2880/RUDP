@@ -141,7 +141,7 @@ namespace NetLibrary
                 Header header = (Header)packet.Span[0];
                 if ((byte)header != (SyncID + 3))
                 {
-                    Logger.DebugLog("과거로 부터의 유산입니다.");
+                    NetLogger.DebugLog("유효하지않은 패킷 ACK 수신! 버림");
                     return;
                 }
                 NetJob_ReceiveACK(packet);
@@ -156,14 +156,14 @@ namespace NetLibrary
                 Header header = (Header)packet.Span[0];
                 if ((byte)header != SyncID)
                 {
-                    Logger.DebugLog("과거로부터의 패킷입니다.");
+                    NetLogger.DebugLog("유효하지않은 패킷 수신! 버림");
                     return;
                 }
                 NetJob_ReceiveDATA(packet);
 
-                if (DATAQueue.Count > (int)Params.MaxBlockReceiveNum * 2)
+                if (DATAQueue.Count > DefineFlag.MaxBlockReceiveNum * 2)
                 {
-                    Logger.DebugLog($"Too Many Packet... {DATAQueue.Count} Discard");
+                    NetLogger.DebugLog($"Too Many Packet... {DATAQueue.Count} Discard");
                     DATAQueue.Clear();
                 }
             }
@@ -313,7 +313,7 @@ namespace NetLibrary
             int MaxBlcoklength = byte.MaxValue;
             if (packetTypelength + seqlength + datalength + data.Length > MaxBlcoklength)
             {
-                Logger.DebugLog($"Data Byte is over MaxPacketSize({MaxBlcoklength})... it will be discarded");
+                NetLogger.DebugLog($"Data Byte is over MaxPacketSize({MaxBlcoklength})... it will be discarded");
                 return false;
             }
             else
@@ -338,7 +338,7 @@ namespace NetLibrary
             int dataNum = 0;
             if (TemporaryQueue.Count != 0)
             {
-                Logger.DebugLog("Temporary queue 메모리 누수");
+                NetLogger.DebugLog("Temporary queue 메모리 누수");
             }
             while (DefferedSendQueue.TryPeek(out var peekData))
             {
@@ -389,8 +389,8 @@ namespace NetLibrary
         public uint ReceiveCompleteSeq = 0;
         uint NextSendSeq = 1;
         Dictionary<uint, Send_Job> SendJobs = new Dictionary<uint, Send_Job>();
-        ObjectPool<Receive_Job> ReceiveJobPool = new ObjectPool<Receive_Job>((int)Params.MaxBlockReceiveNum);
-        ObjectPool<Send_Job> SendJobPool = new ObjectPool<Send_Job>((int)Params.MaxBlockSendNum);
+        ObjectPool<Receive_Job> ReceiveJobPool = new ObjectPool<Receive_Job>(DefineFlag.MaxBlockReceiveNum);
+        ObjectPool<Send_Job> SendJobPool = new ObjectPool<Send_Job>(DefineFlag.MaxBlockSendNum);
         uint MaxReceiveSeq = 0;
         Dictionary<uint, Receive_Job> ReceiveJobs = new Dictionary<uint, Receive_Job>();
 
@@ -418,8 +418,8 @@ namespace NetLibrary
             public Memory<byte> buffer;
             int NakCount = 0;
             public bool Ack = false;
-            IPEndPoint RemoteEndpoint;
-            Network Net;
+            IPEndPoint RemoteEndpoint = null;
+            Network Net = null;
             Header header;
             public int SendCount = 0;
             public long MaxSendDelay = 0;
@@ -456,9 +456,9 @@ namespace NetLibrary
                 if (!Ack)
                 {
                     NakCount++;
-                    if (!Ack && NakCount > (int)Params.NakNum)
+                    if (!Ack && NakCount > DefineFlag.NakNum)
                     {
-                        Logger.DebugLog($"Nak {Sequence}");
+                        NetLogger.DebugLog($"Nak {Sequence}");
                         SendPacket(0, true);
                         NakCount = 0;
                     }
@@ -493,7 +493,7 @@ namespace NetLibrary
                         }
                         else
                         {
-                            MaxSendDelay += (int)Params.SendDelayIncrease;
+                            MaxSendDelay += DefineFlag.SendDelayIncrease;
                             CurSendDelay = 0;
                             SendCount++;
                         }
@@ -552,7 +552,7 @@ namespace NetLibrary
                         SendCompleteSeq++;
                         SendJobs.Remove(i, out var j);
                         SendJobPool.Return(j);
-                        Logger.DebugLog($"SendCompleteSeq{SendCompleteSeq}");
+                        NetLogger.DebugLog($"SendCompleteSeq{SendCompleteSeq}");
                     }
                     else
                     {
@@ -584,7 +584,7 @@ namespace NetLibrary
                     Send_DATAACK(packet);
                     CheckReceiveComplete();
                 }
-                else if (Math.Abs(PacketSeq - ReceiveCompleteSeq) <= (int)Params.MaxBlockReceiveNum)
+                else if (Math.Abs(PacketSeq - ReceiveCompleteSeq) <= DefineFlag.MaxBlockReceiveNum)
                 {
                     if (ReceiveJobPool.Get(out var Newjob))
                     {
@@ -620,7 +620,7 @@ namespace NetLibrary
                         PacketCompleteQueue.Enqueue(job.buffer.Slice(byteoffset, size));
                         byteoffset += size;
                     }
-                    Logger.DebugLog($"ReceiveComplete {job.Sequence}");
+                    NetLogger.DebugLog($"ReceiveComplete {job.Sequence}");
                     ReceiveJobs.Remove(i, out var j);
                     ReceiveJobPool.Return(j);
                 }
@@ -675,8 +675,8 @@ namespace NetLibrary
 
         void NetJob_Send()
         {
-            int ServerMaxBlockSendNum = (int)Params.MaxBlockReceiveNum;
-            if (Math.Abs(NextSendSeq - SendCompleteSeq) <= Math.Min(ServerMaxBlockSendNum, (int)Params.MaxBlockSendNum))
+            int ServerMaxBlockSendNum = DefineFlag.MaxBlockReceiveNum;
+            if (Math.Abs(NextSendSeq - SendCompleteSeq) <= Math.Min(ServerMaxBlockSendNum, DefineFlag.MaxBlockSendNum))
             {
                 if (DispatchedQueue.TryPeek(out var packet))
                 {
@@ -693,7 +693,7 @@ namespace NetLibrary
                         else
                         {
                             SendJobPool.Return(job);
-                            Logger.DebugLog("송신 패킷 시퀀스 중복 버그 발생 버그 발생 삐용 삐용");
+                            NetLogger.DebugLog("송신 패킷 시퀀스 중복 버그 발생 버그 발생 삐용 삐용");
                         }
                     }
 
