@@ -21,7 +21,7 @@ using System.Text;
             string Serverip = "192.168.0.38";
             ushort Serverport = 8000;
             IPEndPoint Server = new IPEndPoint(IPAddress.Parse(Serverip).MapToIPv6(), Serverport);
-            bool Success = client.CreateEndUser(Any, SessionType.RUDP, out var user);
+            bool Success = client.CreateEndUser(Server, SessionType.RUDP, out var user);
             // 3.  원격지에 동기화 요청을 보낸다. 
             //      3-1 동기화는 2 hand shake 를 거침으로 성공 여부를 정확히 알 수 없다.
             //      3-2 Timeout 기간이 짧다면 동기화 요청이 실패할 가능성이 높다.
