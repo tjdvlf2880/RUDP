@@ -10,7 +10,7 @@ namespace NetLibrary
 {
     public class Network
     {
-        public UDPSocket socket;
+        public UDPSocket socket { get; }
         public SendEventArgsPool SendArgpool { get; }
         public ReceiveEventArgsPool ReceiveArgpool { get; }
 

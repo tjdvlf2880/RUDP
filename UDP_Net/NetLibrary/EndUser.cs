@@ -14,7 +14,7 @@ namespace NetLibrary
         // EndUser 스레드에서 넣고 Logic 스레드에서 뺀다.
         public ConcurrentQueue<Memory<byte>> PacketCompleteQueue = new ConcurrentQueue<Memory<byte>>();
         //  Logic 스레드에서 넣고 EndUser 스레드에서 뺀다.
-        ConcurrentQueue<Memory<byte>> DispatchedQueue = new ConcurrentQueue<Memory<byte>>();
+        ConcurrentQueue<byte[]> DispatchedQueue = new ConcurrentQueue<byte[]>();
         //  Logic 스레드에서 넣고 EndUser 스레드에서 뺀다.
         public ConcurrentQueue<SysRPCArgs> SysRPCQueue = new ConcurrentQueue<SysRPCArgs>();
 
@@ -94,7 +94,7 @@ namespace NetLibrary
                 buffer[offset] = (byte)OldSyncId;
                 offset += SyncIDTypeLength;
                 buffer[offset] = (byte)NewId;
-                e.SetBuffer(buffer);
+                e.SetBuffer(buffer, 0, buffer.Length);
                 e.RemoteEndPoint = RemoteEndPoint;
                 e.UserToken = Net;
                 if (!Net.socket.Send(e, Network.SocketSendCallback))
@@ -123,7 +123,7 @@ namespace NetLibrary
                 offset += SyncIDTypeLength;
                 buffer[offset] = (byte)NewID;
                 offset += SyncIDTypeLength;
-                e.SetBuffer(buffer);
+                e.SetBuffer(buffer,0,buffer.Length);
                 e.RemoteEndPoint = remote;
                 e.UserToken = Net;
                 if (!Net.socket.Send(e, Network.SocketSendCallback))
@@ -360,19 +360,19 @@ namespace NetLibrary
             if (dataNum != 0)
             {
                 int offset = 0;
-                Memory<byte> buffer = new byte[packetTypelength + seqlength + dataSize];
+                byte[] buffer = new byte[packetTypelength + seqlength + dataSize];
                 offset += packetTypelength;
-                buffer.Slice(offset, seqlength).Span.Fill(0);
+                buffer.AsMemory().Slice(offset, seqlength).Span.Fill(0);
                 offset += seqlength;
                 for (int i = 0; i < dataNum; i++)
                 {
                     // 큐에서 데이터 꺼내기
                     var data = TemporaryQueue.Dequeue();
-                    buffer.Slice(offset, seqlength).Span.Fill(0);
-                    Serializer.ToByte(data.Length, datalength).AsMemory<byte>().CopyTo(buffer.Slice(offset, datalength));
+                    buffer.AsMemory().Slice(offset, seqlength).Span.Fill(0);
+                    Serializer.ToByte(data.Length, datalength).AsMemory<byte>().CopyTo(buffer.AsMemory().Slice(offset, datalength));
                     offset += datalength;
                     // 데이터를 buffer에 추가하기
-                    data.CopyTo(buffer.Slice(offset, data.Length));
+                    data.CopyTo(buffer.AsMemory().Slice(offset, data.Length));
                     offset += data.Length;
                 }
                 DispatchedQueue.Enqueue(buffer);
@@ -415,7 +415,7 @@ namespace NetLibrary
         public class Send_Job
         {
             public uint Sequence = 0;
-            public Memory<byte> buffer;
+            public byte[] buffer;
             int NakCount = 0;
             public bool Ack = false;
             IPEndPoint RemoteEndpoint = null;
@@ -437,7 +437,7 @@ namespace NetLibrary
                 Ack = false;
             }
 
-            public void UpdatePacket(Network Net, IPEndPoint RemoteEndpoint, uint Sequence, Header header, Memory<byte> buffer)
+            public void UpdatePacket(Network Net, IPEndPoint RemoteEndpoint, uint Sequence, Header header, byte[] buffer)
             {
                 this.Net = Net;
                 this.Sequence = Sequence;
@@ -470,9 +470,9 @@ namespace NetLibrary
                 int packetTypelength = 1;
                 int Packetseqlength = 4;
                 int offset = 0;
-                buffer.Span[offset] = (byte)header;
+                buffer.AsSpan()[offset] = (byte)header;
                 offset += packetTypelength;
-                Serializer.ToByte((int)packetSeq, Packetseqlength).AsSpan().Slice(0, Packetseqlength).CopyTo(buffer.Span.Slice(offset, Packetseqlength));
+                Serializer.ToByte((int)packetSeq, Packetseqlength).AsSpan().Slice(0, Packetseqlength).CopyTo(buffer.AsSpan().Slice(offset, Packetseqlength));
                 offset += Packetseqlength;
             }
 
@@ -484,7 +484,7 @@ namespace NetLibrary
                 {
                     if (Net.SendArgpool.Get(out var e))
                     {
-                        e.SetBuffer(buffer);
+                        e.SetBuffer(buffer, 0, buffer.Length);
                         e.RemoteEndPoint = RemoteEndpoint;
                         e.UserToken = Net;
                         if (!Net.socket.Send(e, Network.SocketSendCallback))
@@ -638,11 +638,11 @@ namespace NetLibrary
                 int PacketTypeLength = 1;
                 int PacketSeqLength = 4;
                 int AckFieldLength = 1;
-                Memory<byte> buffer = new byte[PacketTypeLength + PacketSeqLength + AckFieldLength];
-                buffer.Span[offset] = (byte)(SyncID + 3);
+                byte[] buffer = new byte[PacketTypeLength + PacketSeqLength + AckFieldLength];
+                buffer.AsSpan()[offset] = (byte)(SyncID + 3);
                 offset += PacketTypeLength;
                 uint PacketSeq = BitConverter.ToUInt32(packet.Slice(offset, PacketSeqLength).Span);
-                packet.Slice(offset, PacketSeqLength).CopyTo(buffer.Slice(offset, PacketSeqLength));
+                packet.Slice(offset, PacketSeqLength).CopyTo(buffer.AsMemory().Slice(offset, PacketSeqLength));
                 offset += PacketSeqLength;
 
                 // 해당 패킷 이전의 8개 패킷에 대한 ACK 도 함께 보내준다.
@@ -662,8 +662,8 @@ namespace NetLibrary
                     loopCount++;
                 }
 
-                buffer.Span[offset] = bitfield;
-                e.SetBuffer(buffer);
+                buffer.AsSpan()[offset] = bitfield;
+                e.SetBuffer(buffer, 0, buffer.Length);
                 e.RemoteEndPoint = RemoteEndPoint;
                 e.UserToken = Net;
                 if (!Net.socket.Send(e, Network.SocketSendCallback))
