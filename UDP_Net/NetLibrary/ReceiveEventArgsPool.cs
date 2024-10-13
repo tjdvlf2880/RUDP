@@ -17,22 +17,21 @@ namespace NetLibrary
         {
             pool = new ConcurrentBag<SocketAsyncEventArgs>();
             ReceiveCallback = callback;
-            Memory<byte> mem = new byte[DefineFlag.MaxReceiveArgsNum * DefineFlag.MaxPacketBlockSize];
-            mem.Span.Fill(0);
 
             for (int i = 0; i < DefineFlag.MaxReceiveArgsNum; i++)
             {
-                SocketAsyncEventArgs e;
-                Create(out e, mem.Slice(i * DefineFlag.MaxPacketBlockSize, DefineFlag.MaxPacketBlockSize));
+                SocketAsyncEventArgs e = new SocketAsyncEventArgs();
+
+                /* .netStandard 2.1 mono unity 에서 Dll로 사용하려는데
+                   socketError는  success 인데 0 바이트로 읽는 버그 발생
+                   12시간의 삽질 후 e.SetBuffer(Memory<byte>); 이게 동작하지 않는다는걸 발견.. 후.... 후...후욱..
+                 */
+
+                e.SetBuffer(new byte[DefineFlag.MaxPacketBlockSize],0, DefineFlag.MaxPacketBlockSize);
+                e.UserToken = null;
+                e.Completed += ReceiveCallback;
                 pool.Add(e);
             }
-        }
-        void Create(out SocketAsyncEventArgs e, Memory<byte> buffer)
-        {
-            e = new SocketAsyncEventArgs();
-            e.SetBuffer(buffer);
-            e.UserToken = null;
-            e.Completed += ReceiveCallback;
         }
 
         public bool Get(out SocketAsyncEventArgs e)
