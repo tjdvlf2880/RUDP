@@ -41,6 +41,23 @@ namespace NetLibrary
 
         }
 
+
+        public void SendDummy(IPEndPoint remote, byte[] data)
+        {
+            if(SendArgpool.Get(out var e))
+            {
+                e.SetBuffer(data,0,data.Length);
+                e.RemoteEndPoint = remote;
+                e.UserToken = this;
+                if(!socket.Send(e,SocketSendCallback))
+                {
+                    SendArgpool.Return(e);
+                    NetLogger.DebugLog("SendDummy Fail");
+                }
+            }
+        }
+
+
         public void NetworkThread()
         {
             FrameTimer timer = new FrameTimer();

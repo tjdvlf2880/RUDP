@@ -21,7 +21,8 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /Y &quot;$(TargetDir)$(TargetName).dll&quot; &quot;C:\Users\zx288\Desktop\CasualGame\Client\Assets\Plugins\NetLibrary\netstandard2.1&quot;" />
-    <Exec Command="xcopy /Y &quot;$(TargetDir)$(TargetName).dll&quot; &quot;C:\Users\zx288\Desktop\CasualGame\SERVER\Assets\Plugins\NetLibrary\netstandard2.1&quot;" />
+    <Exec Command="xcopy /Y &quot;$(TargetDir)$(TargetName).dll&quot; &quot;C:\Users\zx288\Desktop\CasualGame\Client\Assets\Plugins\NetLibrary\netstandard2.1&quot;&#xD;&#xA;xcopy /Y &quot;$(TargetDir)$(TargetName).dll&quot; &quot;C:\Users\zx288\Desktop\CasualGame\SERVER\Assets\Plugins\NetLibrary\netstandard2.1&quot;&#xD;&#xA;" />
   </Target>
+
+  
 </Project>

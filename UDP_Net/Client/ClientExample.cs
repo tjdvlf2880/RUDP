@@ -3,12 +3,13 @@ using NetLibrary.Utils;
 using System.Net;
 using System.Text;
 
-namespace Client
+
+    internal class ClientExample
 {
-    internal class Program
-    {
         static void Main(string[] args)
         {
+            DefineFlag.UnityLog = false;
+
             // 1. 자신의 IP PORT 로 네트워크 객체를 생성한다.
             //      2-1 IP에 ANY 그리고 PORT에 0을 주면 자동 할당 된다.
             //      2-2 네트워크 객체 생성시 최대 연결 개수를 지정한다.
@@ -20,7 +21,7 @@ namespace Client
             string Serverip = "192.168.0.38";
             ushort Serverport = 8000;
             IPEndPoint Server = new IPEndPoint(IPAddress.Parse(Serverip).MapToIPv6(), Serverport);
-            bool Success = client.CreateEndUser(Server, SessionType.RUDP, out var user);
+            bool Success = client.CreateEndUser(Any, SessionType.RUDP, out var user);
             // 3.  원격지에 동기화 요청을 보낸다. 
             //      3-1 동기화는 2 hand shake 를 거침으로 성공 여부를 정확히 알 수 없다.
             //      3-2 Timeout 기간이 짧다면 동기화 요청이 실패할 가능성이 높다.
@@ -51,4 +52,3 @@ namespace Client
             client.Dispose();
         }
     }
-}

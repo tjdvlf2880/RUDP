@@ -4,18 +4,19 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
 
-namespace Client
-{
-    internal class Program
+
+    internal class ServerExample
     {
         static void Main(string[] args)
         {
+            DefineFlag.UnityLog = false;
             // 1. 자신의 IP PORT 로 네트워크 객체를 생성한다.
             //      1-1 네트워크 객체 생성시 최대 연결 개수를 지정한다.
             string Serverip = "192.168.0.38";
             ushort Serverport = 8000;
             IPEndPoint ServerAddress = new IPEndPoint(IPAddress.Loopback.MapToIPv6(), Serverport);
             Network Server = new Network(ServerAddress, 255);
+
             // 2. 클라이언트의 Sync 요청을 대기한다. 
             //      2-1 동기화는 2 hand shake 를 거침으로 성공 여부를 정확히 알 수 없다.
             //      2-2 Timeout 기간이 짧다면 동기화 요청이 실패할 가능성이 높다.
@@ -70,4 +71,3 @@ namespace Client
             Server.Dispose();
         }
     }
-}

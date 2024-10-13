@@ -39,7 +39,7 @@ namespace NetLibrary
     {
         public static bool LogEnable = true;
         public static bool UnityLog = true;
-        public static bool PacketLoseMode = true;
+        public static bool PacketLoseMode = false;
 
         // 소켓 송수신 지원 크기
         public static int MaxReceiveArgsNum = 255;
