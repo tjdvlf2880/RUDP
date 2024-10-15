@@ -6,7 +6,7 @@ using System.Text;
 
     internal class ClientExample
 {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             DefineFlag.UnityLog = false;
 
@@ -26,7 +26,7 @@ using System.Text;
             //      3-1 동기화는 2 hand shake 를 거침으로 성공 여부를 정확히 알 수 없다.
             //      3-2 Timeout 기간이 짧다면 동기화 요청이 실패할 가능성이 높다.
             //      3-3 패킷을 보내 직접 응답을 체크하여 동기화 성공을 판단해야 한다. 
-            bool MightBeSuccess = user.SyncEndUser(1000);
+            bool MightBeSuccess = await user.SyncEndUser(1000);
             // 4.  패킷 송신 
             //      4-1 패킷량을 줄이기 위해서는 DefferedQueue에 메세지를 보낸다.
             //      4-2 DisPatch 호출시 큐에 쌓인 패킷이 블록 뭉탱이로 전송된다.

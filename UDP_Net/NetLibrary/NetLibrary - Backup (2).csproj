@@ -19,5 +19,8 @@
     </Reference>
   </ItemGroup>
 
-
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy /Y &quot;$(TargetDir)$(TargetName).dll&quot; &quot;C:\Users\zx288\Desktop\Legal-Dodgeball\Server\Client\Plugins\NetLibrary\netstandard2.1&quot;" />
+    <Exec Command="xcopy /Y &quot;$(TargetDir)$(TargetName).dll&quot; &quot;C:\Users\zx288\Desktop\Legal-Dodgeball\Server\Assets\Plugins\NetLibrary\netstandard2.1&quot;" />
+  </Target>
 </Project>

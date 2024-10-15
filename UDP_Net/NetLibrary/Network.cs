@@ -14,7 +14,7 @@ namespace NetLibrary
         public SendEventArgsPool SendArgpool { get; }
         public ReceiveEventArgsPool ReceiveArgpool { get; }
 
-        public Notifier<EndUser> SyncNotifer;
+        public Notifier<EndUser?> SyncNotifer;
 
         InterLockedVal EndUserNum;
 
@@ -30,7 +30,7 @@ namespace NetLibrary
             SendArgpool = new SendEventArgsPool(SocketSendCallback);
             ReceiveArgpool = new ReceiveEventArgsPool(SocketReceiveCallback);
             EndUserNum = new InterLockedVal(MaxConnection);
-            SyncNotifer = new Notifier<EndUser>(MaxConnection);
+            SyncNotifer = new Notifier<EndUser?>(MaxConnection);
             Run = true;
             for (int i = 0; i < DefineFlag.MaxReceiveArgsNum; i++)
             {
@@ -44,12 +44,12 @@ namespace NetLibrary
 
         public void SendDummy(IPEndPoint remote, byte[] data)
         {
-            if(SendArgpool.Get(out var e))
+            if (SendArgpool.Get(out var e))
             {
-                e.SetBuffer(data,0,data.Length);
+                e.SetBuffer(data, 0, data.Length);
                 e.RemoteEndPoint = remote;
                 e.UserToken = this;
-                if(!socket.Send(e,SocketSendCallback))
+                if (!socket.Send(e, SocketSendCallback))
                 {
                     SendArgpool.Return(e);
                     NetLogger.DebugLog("SendDummy Fail");
@@ -68,6 +68,10 @@ namespace NetLibrary
                     kv.Value.Work(timer.GetFrameElapsed());
                 }
             }
+            foreach (var kv in EndUsers)
+            {
+                kv.Value.Dispose();
+            }
         }
 
         public bool CreateEndUser(IPEndPoint remote, SessionType type, out EndUser user)
@@ -78,10 +82,14 @@ namespace NetLibrary
             return EndUsers.TryGetValue(remote, out user);
         }
 
-        public bool WaitSyncRequest(out EndUser user, int? timeout)
+        public async Task<(bool success, EndUser? user)> WaitSyncRequest(int timeout)
         {
-            SyncNotifer.Wait(out user, timeout);
-            return user != null;
+            if (SyncNotifer != null)
+            {
+                var (success, user) = await SyncNotifer?.Wait(timeout);
+                return (success, user);
+            }
+            return (false, null); // 성공 여부와 사용자 반환
         }
 
         void Enqueue(Header header, SocketAsyncEventArgs e)
@@ -218,7 +226,9 @@ namespace NetLibrary
         {
             Run = false;
             NetThread.Join();
+            NetThread = null;
             SyncNotifer.Dispose();
+            SyncNotifer = null;
             socket.Dispose();
         }
     }

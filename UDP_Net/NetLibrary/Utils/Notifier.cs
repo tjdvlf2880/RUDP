@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NetLibrary.Utils
 {
@@ -7,48 +8,58 @@ namespace NetLibrary.Utils
     {
         ConcurrentQueue<T> values = new ConcurrentQueue<T>();
         SemaphoreSlim semaphoreSlim;
+
+        private CancellationTokenSource NotifyTaskTokenSource = null;
+        private CancellationToken NotifyTaskToken;
+
+        private int MaxSemaphoreCount;
+
+
         public Notifier(int max)
         {
-            semaphoreSlim = new SemaphoreSlim(0, max);
+            MaxSemaphoreCount = max;
+            semaphoreSlim = new SemaphoreSlim(0, MaxSemaphoreCount);
+            NotifyTaskTokenSource = new CancellationTokenSource();
+            NotifyTaskToken = NotifyTaskTokenSource.Token;
         }
 
         public void Dispose()
         {
+            NotifyTaskTokenSource.Cancel();
+            for (int i = 0; i < MaxSemaphoreCount; i++)
+            {
+                semaphoreSlim.Release();
+            }
             semaphoreSlim.Dispose();
+            NotifyTaskTokenSource.Dispose();
+            NotifyTaskTokenSource = null;
+            semaphoreSlim = null;
         }
         public void Notify(T val)
         {
             values.Enqueue(val);
             semaphoreSlim.Release(1);
         }
-
-        public bool Wait(out T val, int? timeout)
+        public async Task<(bool success, T val)> Wait(int timeout)
         {
-            val = default;
-            if (timeout == null)
+            T val = default;
+            try
             {
-                semaphoreSlim.Wait();
-                if (values.TryDequeue(out val))
+                if (await semaphoreSlim.WaitAsync(timeout, NotifyTaskToken))
                 {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                if (semaphoreSlim.Wait((int)timeout))
-                {
+                    // 큐에서 값을 가져옵니다.
                     if (values.TryDequeue(out val))
                     {
-                        return true;
+                        return (true, val);
                     }
                 }
-                return false;
+                return (false, val);
+            }
+            catch
+            {
+                NetLogger.DebugLog("Notifier Stopped!");
+                return (false, val);
             }
         }
-
     }
 }

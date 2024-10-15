@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading.Tasks;
 namespace NetLibrary
 {
     public partial class EndUser
@@ -54,8 +55,8 @@ namespace NetLibrary
             {
                 var job = kvp.Value;
                 ReceiveJobPool.Return(job);
-                ReceiveJobs.Remove(kvp.Key);
             }
+            ReceiveJobs.Clear();
 
             ReceiveCompleteSeq = 0;
             MaxReceiveSeq = 0;
@@ -64,8 +65,9 @@ namespace NetLibrary
             {
                 var job = kvp.Value;
                 SendJobPool.Return(job);
-                SendJobs.Remove(kvp.Key);
             }
+            SendJobs.Clear();
+
             SendCompleteSeq = 0;
             NextSendSeq = 1;
 
@@ -123,7 +125,7 @@ namespace NetLibrary
                 offset += SyncIDTypeLength;
                 buffer[offset] = (byte)NewID;
                 offset += SyncIDTypeLength;
-                e.SetBuffer(buffer,0,buffer.Length);
+                e.SetBuffer(buffer, 0, buffer.Length);
                 e.RemoteEndPoint = remote;
                 e.UserToken = Net;
                 if (!Net.socket.Send(e, Network.SocketSendCallback))
@@ -267,12 +269,12 @@ namespace NetLibrary
             }
         }
 
-        public bool SyncEndUser(int timeout)
+        public async Task<bool> SyncEndUser(int timeout)
         {
             SysRPC_SyncEndUser rpc = new SysRPC_SyncEndUser(this, RemoteEndPoint, timeout);
             SysRPCQueue.Enqueue(rpc);
-            rpc.notifier.Wait(out var result, timeout);
-            return result;
+            var (success, result) = await rpc.notifier.Wait(timeout);
+            return success && result;
         }
 
         void SysRPCProc()
@@ -368,7 +370,6 @@ namespace NetLibrary
                 {
                     // 큐에서 데이터 꺼내기
                     var data = TemporaryQueue.Dequeue();
-                    buffer.AsMemory().Slice(offset, seqlength).Span.Fill(0);
                     Serializer.ToByte(data.Length, datalength).AsMemory<byte>().CopyTo(buffer.AsMemory().Slice(offset, datalength));
                     offset += datalength;
                     // 데이터를 buffer에 추가하기

@@ -27,7 +27,7 @@ namespace NetLibrary
                    12시간의 삽질 후 e.SetBuffer(Memory<byte>); 이게 동작하지 않는다는걸 발견.. 후.... 후...후욱..
                  */
 
-                e.SetBuffer(new byte[DefineFlag.MaxPacketBlockSize],0, DefineFlag.MaxPacketBlockSize);
+                e.SetBuffer(new byte[DefineFlag.MaxPacketBlockSize], 0, DefineFlag.MaxPacketBlockSize);
                 e.UserToken = null;
                 e.Completed += ReceiveCallback;
                 pool.Add(e);
